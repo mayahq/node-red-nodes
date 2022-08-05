@@ -1,5 +1,5 @@
 {
-    "name": "node-red-node-mysql",
+    "name": "@mayahq/node-red-node-mysql",
     "version": "1.0.3",
     "description": "A Node-RED node to read and write to a MySQL database",
     "dependencies": {
