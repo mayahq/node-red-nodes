@@ -3,6 +3,7 @@ module.exports = function(RED) {
     "use strict";
     var reconnect = RED.settings.mysqlReconnectTime || 20000;
     var mysqldb = require('mysql2');
+    var mysqldump = require('mysqldump')
 
     function MySQLNode(n) {
         RED.nodes.createNode(this,n);
@@ -15,6 +16,7 @@ module.exports = function(RED) {
         this.connecting = false;
 
         this.dbname = n.db;
+        this.schemaAccess = n.schemaAccess;
         this.setMaxListeners(0);
         var node = this;
 
@@ -99,7 +101,17 @@ module.exports = function(RED) {
         RED.nodes.createNode(this,n);
         this.mydb = n.mydb;
         this.mydbConfig = RED.nodes.getNode(this.mydb);
+        console.log("🚀 ~ file: 68-mysql.js:104 ~ MysqlDBNodeIn ~ this.mydbConfig:", this.mydbConfig)
         this.status({});
+
+        const host = this.mydbConfig.host;
+        console.log("🚀 ~ file: 68-mysql.js:107 ~ MysqlDBNodeIn ~ host:", host)
+        const db = this.mydbConfig.dbname;
+        const user = this.mydbConfig.credentials.user;
+        const password = this.mydbConfig.credentials.password;
+        const schemaAccess = this.mydbConfig.schemaAccess;
+
+        const nodeContext = this.context();
 
         if (this.mydbConfig) {
             this.mydbConfig.connect();
@@ -114,11 +126,64 @@ module.exports = function(RED) {
                 }
             });
 
+            async function getMysqlDump(){
+                return await mysqldump({
+                    connection: {
+                      host: host,
+                      user: user,
+                      password: password,
+                      database: db
+                    },
+                    dump: {
+                        tables: [],
+                        schema: {
+                        autoIncrement: true,
+                        engine: true,
+                        format: true,
+                        table: {
+                            ifNotExist: false,
+                            dropIfExist: false,
+                            charset: 'UTF-8'
+                            }
+                        },
+                        data: false,
+                    }
+                  })
+            }
+
+            if(schemaAccess){
+                getMysqlDump().then(result => {
+                    nodeContext.set(`${this.mydb}_schema`, result.dump.schema)
+                }).catch(err => {
+                    status = { fill: "red", shape: "ring", text: RED._("mysql.status.error") + ": " + err.code };
+                    this.status(status)
+                    this.error(err, err.message)
+                })
+            } else {
+                nodeContext.set(`${this.mydb}_schema`, null)
+            }
+
             node.on("input", function(msg, send, done) {
                 send = send || function() { node.send.apply(node,arguments) };
                 if (node.mydbConfig.connected) {
-                    if (typeof msg.topic === 'string') {
-                        //console.log("query:",msg.topic);
+                    if(!nodeContext.get(`${node.mydb}_schema`) && msg.payload.renewSchema && typeof msg.payload.renewSchema === 'boolean'){
+                        if(schemaAccess === "true"){
+                            getMysqlDump().then(result => {
+                                nodeContext.set(`${node.mydb}_schema`, result.dump.schema)
+                                msg.payload.schema = result.dump.schema;
+                            }).catch(err => {
+                                status = { fill: "red", shape: "ring", text: RED._("mysql.status.error") + ": " + err.code };
+                                node.status(status)
+                                node.error(err, err.message)
+                            })
+                        } else {
+                            nodeContext.set(`${node.mydb}_schema`, null)
+                            msg.payload.schema = null
+                        }
+                    } else {
+                        msg.payload.schema = nodeContext.get(`${node.mydb}_schema`)
+                    }
+                    if (typeof msg.payload.query === 'string') {
                         node.mydbConfig.pool.getConnection(function (err, conn) {
                             if (err) {
                                 if (conn) {
@@ -132,14 +197,14 @@ module.exports = function(RED) {
                             }
 
                             var bind = [];
-                            if (Array.isArray(msg.payload)) {
+                            if (Array.isArray(msg.payload.values)) {
                                 bind = msg.payload;
                             }
-                            else if (typeof msg.payload === 'object' && msg.payload !== null) {
+                            else if (typeof msg.payload.values === 'object' && msg.payload.values !== null) {
                                 bind = msg.payload;
                             }
-                            conn.config.queryFormat = Array.isArray(msg.payload) ? null : customQueryFormat
-                            conn.query(msg.topic, bind, function (err, rows) {
+                            conn.config.queryFormat = Array.isArray(msg.payload.values) ? null : customQueryFormat
+                            conn.query(msg.payload.query, bind, function (err, rows) {
                                 conn.release()
                                 if (err) {
                                     status = { fill: "red", shape: "ring", text: RED._("mysql.status.error") + ": " + err.code };
@@ -147,7 +212,8 @@ module.exports = function(RED) {
                                     node.error(err, msg);
                                 }
                                 else {
-                                    msg.payload = rows;
+                                    msg.payload.result = rows;
+                                    
                                     send(msg);
                                     status = { fill: "green", shape: "dot", text: RED._("mysql.status.ok") };
                                     node.status(status);
@@ -155,10 +221,9 @@ module.exports = function(RED) {
                                 if (done) { done(); }
                             });
                         })
-
                     }
                     else {
-                        if (typeof msg.topic !== 'string') { node.error("msg.topic : "+RED._("mysql.errors.notstring")); done(); }
+                        if (typeof msg.payload.query !== 'string') { node.error("msg.payload.query : "+RED._("mysql.errors.notstring")); done(); }
                     }
                 }
                 else {
