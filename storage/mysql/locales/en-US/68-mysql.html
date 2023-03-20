@@ -3,14 +3,18 @@
     <p>Add the credentials for accessing your database here.</p>
     <p>Timezone can be set like GMT, EST5EDT, UTC, etc</p>
     <p>The Charset defaults to the "old" 3 byte Mysql UTF8. If you need support for emojis etc then use UTF8MB4.</p>
+    <p>The Access Schema checkbox is to be selected if the credentials provided can read all tables in the database. This
+        can be used to provided necessary information to query database in natural langauge
+    </p>
 </script>
 
 <script type="text/html" data-help-name="mysql">
     <p>Allows basic access to a MySQL database.</p>
     <p>This node uses the <b>query</b> operation against the configured database. This does allow both INSERTS and DELETES.
     By its very nature it allows SQL injection... so <i>be careful out there...</i></p>
-    <p><code>msg.topic</code> must hold the <i>query</i> for the database, and the result is returned in <code>msg.payload</code>.</p>
-    <p><code>msg.payload</code> can contain an array of values to bind to the topic.</p>
+    <p><code>msg.payload.query</code> must hold the <i>query</i> for the database, and the result is returned in <code>msg.payload</code>.</p>
+    <p><code>msg.payload.renewSchema</code> can be set to true to immediate refresh the scheam information in the system</p>
+    <p><code>msg.payload.values</code> can contain an array of values to bind to the topic.</p>
     <p>Typically the returned payload will be an array of the result rows. <b>Note</b>:
     these are of type <i>RowDataPacket</i>, and not a completely standard object.</p>
     <p>If nothing is found for the key then <i>null</i> is returned,</p>

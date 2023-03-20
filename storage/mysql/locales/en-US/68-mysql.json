@@ -7,7 +7,8 @@
             "password": "Password",
             "database": "Database",
             "timezone": "Timezone",
-            "charset": "Charset"
+            "charset": "Charset",
+            "accessSchema": "Access Schema"
         },
         "status": {
             "badping": "Bad Ping",
