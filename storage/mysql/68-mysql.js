@@ -123,7 +123,6 @@ module.exports = function(RED) {
         this.mydbConfig = RED.nodes.getNode(this.mydb);
 
         this.query = n.query;
-        console.log("🚀 ~ file: 68-mysql.js:126 ~ MysqlDBNodeIn ~ this.query:", this.query)
         this.status({});
 
         const host = this.mydbConfig.host;
@@ -202,11 +201,10 @@ module.exports = function(RED) {
             node.on("input", function(msg, send, done) {
                 if(this.query !== "payload.query"){
                     msg.payload.query = this.query;
-                }
-                send = send || function() { node.send.apply(node,arguments) };
+                }                
                 if (node.mydbConfig.connected) {
                     if(!nodeContext.get(`${node.mydb}_schema`) && msg.payload.renewSchema && typeof msg.payload.renewSchema === 'boolean'){
-                        if(schemaAccess === "true"){
+                        if(schemaAccess){
                             getMysqlDump().then(result => {
                                 nodeContext.set(`${node.mydb}_schema`, result.dump.schema)
                                 msg.payload.schema = result.dump.schema;
@@ -222,7 +220,10 @@ module.exports = function(RED) {
                     } else {
                         msg.payload.schema = nodeContext.get(`${node.mydb}_schema`)
                     }
-                    if (typeof msg.payload.query === 'string') {
+                    send = send || function() { node.send.apply(node,arguments) };
+                    if(!msg.payload.query){
+                        node.send(msg)
+                    } else if (typeof msg.payload.query === 'string') {
                         node.mydbConfig.pool.getConnection(function (err, conn) {
                             if (err) {
                                 if (conn) {
@@ -252,7 +253,6 @@ module.exports = function(RED) {
                                 }
                                 else {
                                     msg.payload.result = rows;
-                                    
                                     send(msg);
                                     status = { fill: "green", shape: "dot", text: RED._("mysql.status.ok") };
                                     node.status(status);
