@@ -1,6 +1,6 @@
 {
     "name": "@mayahq/maya-red-node-mysql",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "A fork of Node-RED mysql node to read and write to a MySQL database",
     "dependencies": {
         "mysql2": "^2.3.3",
@@ -8,7 +8,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/node-red/node-red-nodes.git",
+        "url": "https://github.com/mayahq/node-red-nodes.git",
         "directory": "tree/master/storage/mysql"
     },
     "license": "Apache-2.0",
@@ -20,10 +20,5 @@
         "nodes": {
             "mysql": "68-mysql.js"
         }
-    },
-    "author": {
-        "name": "Dave Conway-Jones",
-        "email": "ceejay@vnet.ibm.com",
-        "url": "http://nodered.org"
     }
 }

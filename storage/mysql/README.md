@@ -7,7 +7,7 @@ Install
 
 Either use the `Maya's Module Install - MySQL Node`, or run the following command in your Node-RED user directory - typically `~/.node-red`
 
-    npm i node-red-node-mysql
+    npm i @mayahq/maya-red-node-mysql
 
 
 Usage
