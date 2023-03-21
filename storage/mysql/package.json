@@ -1,7 +1,7 @@
 {
-    "name": "@mayahq/node-red-node-mysql",
-    "version": "1.0.4",
-    "description": "A Node-RED node to read and write to a MySQL database",
+    "name": "@mayahq/maya-red-node-mysql",
+    "version": "1.0.5",
+    "description": "A fork of Node-RED mysql node to read and write to a MySQL database",
     "dependencies": {
         "mysql2": "^2.3.3",
         "mysqldump": "^3.2.0"
