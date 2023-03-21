@@ -121,11 +121,12 @@ module.exports = function(RED) {
         RED.nodes.createNode(this,n);
         this.mydb = n.mydb;
         this.mydbConfig = RED.nodes.getNode(this.mydb);
-        console.log("🚀 ~ file: 68-mysql.js:104 ~ MysqlDBNodeIn ~ this.mydbConfig:", this.mydbConfig)
+
+        this.query = n.query;
+        console.log("🚀 ~ file: 68-mysql.js:126 ~ MysqlDBNodeIn ~ this.query:", this.query)
         this.status({});
 
         const host = this.mydbConfig.host;
-        console.log("🚀 ~ file: 68-mysql.js:107 ~ MysqlDBNodeIn ~ host:", host)
         const db = this.mydbConfig.dbname;
         const user = this.mydbConfig.credentials.user;
         const password = this.mydbConfig.credentials.password;
@@ -171,6 +172,21 @@ module.exports = function(RED) {
                   })
             }
 
+            function resolveValue(RED, name, node, config, msg) {
+                try {
+                    const value = node[name]
+                    const valueType = node[`payloadType${name}`]
+                    if (valueType === 'str') {
+                        return value
+                    }
+        
+                    const val = RED.util.evaluateNodeProperty(value, valueType, node, msg)
+                    return val
+                } catch (e) {
+                    throw new Error(`Error resolving value: ${e}`)
+                }
+            }
+
             if(schemaAccess){
                 getMysqlDump().then(result => {
                     nodeContext.set(`${this.mydb}_schema`, result.dump.schema)
@@ -184,6 +200,9 @@ module.exports = function(RED) {
             }
 
             node.on("input", function(msg, send, done) {
+                if(this.query !== "payload.query"){
+                    msg.payload.query = this.query;
+                }
                 send = send || function() { node.send.apply(node,arguments) };
                 if (node.mydbConfig.connected) {
                     if(!nodeContext.get(`${node.mydb}_schema`) && msg.payload.renewSchema && typeof msg.payload.renewSchema === 'boolean'){
