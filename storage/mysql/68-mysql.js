@@ -188,7 +188,7 @@ module.exports = function(RED) {
 
             if(schemaAccess){
                 getMysqlDump().then(result => {
-                    nodeContext.set(`${this.mydb}_schema`, result.dump.schema)
+                    nodeContext.set(`${this.mydb}_schema`, "DATABASE NAME: " +db +"\n\n\n"+result.dump.schema)
                 }).catch(err => {
                     status = { fill: "red", shape: "ring", text: RED._("mysql.status.error") + ": " + err.code };
                     this.status(status)
@@ -206,7 +206,7 @@ module.exports = function(RED) {
                     if(!nodeContext.get(`${node.mydb}_schema`) && msg.payload.renewSchema && typeof msg.payload.renewSchema === 'boolean'){
                         if(schemaAccess){
                             getMysqlDump().then(result => {
-                                nodeContext.set(`${node.mydb}_schema`, result.dump.schema)
+                                nodeContext.set(`${node.mydb}_schema`, "DATABASE NAME: " +db +"\n\n\n"+result.dump.schema)
                                 msg.payload.schema = result.dump.schema;
                             }).catch(err => {
                                 status = { fill: "red", shape: "ring", text: RED._("mysql.status.error") + ": " + err.code };

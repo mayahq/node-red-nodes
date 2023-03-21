@@ -146,8 +146,6 @@ PLEASE CONTACT humans[at]mayalabs.io FOR ANY COPYRIGHT COMPLAINS/TAKEDOWNS
         oneditsave: function(){
             var type = $("#node-input-typed-query").typedInput('type');
             var value = $("#node-input-typed-query").typedInput('value')
-            console.log("🚀 ~ file: 68-mysql.html:149 ~ value:", value)
-            console.log("🚀 ~ file: 68-mysql.html:148 ~ type:", type)
             if (type === 'payload.query') {
                 $("#node-input-query").val("payload.query");
             } else {
