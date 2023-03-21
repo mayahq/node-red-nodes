@@ -1,11 +1,11 @@
-node-red-node-mysql
+@mayahq/maya-red-node-mysql
 ========================
-A <a href="http://nodered.org" target="_new">Node-RED</a> node to read and write to a MySQL database.
+A fork of <a href="http://nodered.org" target="_new">Node-RED</a>'s storage/mysql node to read and write to a MySQL database.
 
 Install
 -------
 
-Either use the `Node-RED Menu - Manage Palette - Install`, or run the following command in your Node-RED user directory - typically `~/.node-red`
+Either use the `Maya's Module Install - MySQL Node`, or run the following command in your Node-RED user directory - typically `~/.node-red`
 
     npm i node-red-node-mysql
 
@@ -19,7 +19,7 @@ This node uses the **query** operation against the configured database. This doe
 
 By its very nature it allows SQL injection... so *be careful out there...*
 
-The `msg.topic` must hold the *query* for the database, and the result is returned in `msg.payload`.
+The `msg.payload.query` must hold the *query* for the database, and the result is returned in `msg.payload.result`.
 
 Typically the returned payload will be an array of the result rows.
 
@@ -39,7 +39,7 @@ Preparing Queries
 -----
 ```javascript
 msg.payload=[24, 'example-user'];
-msg.topic="INSERT INTO users (`userid`, `username`) VALUES (?, ?);"
+msg.payload.query="INSERT INTO users (`userid`, `username`) VALUES (?, ?);"
 return msg;
 ```
 
@@ -47,11 +47,16 @@ with named parameters:
 
 ```javascript
 msg.payload={}
-msg.payload.userToChange=42;
-msg.payload.newUsername="example-user";
+msg.payload.values.userToChange=42;
+msg.payload.values.newUsername="example-user";
 msg.topic="INSERT INTO users (`userid`, `username`) VALUES (:userToChange, :newUsername) ON DUPLICATE KEY UPDATE `username`=:newUsername;"
 return msg;
 ```
+
+```javascript
+msg.payload.renewSchema = true;
+```
+to update the schema infromation of the database provided the supplied user credentials has access to the schema information. This returns `msg.payload.schema` with the create schema information of all tables in the database.
 
 Documentation
 -----
