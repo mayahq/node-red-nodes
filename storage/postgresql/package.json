@@ -1,6 +1,6 @@
 {
     "name": "@mayahq/maya-red-node-postgres",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A fork of Node-RED postgres node to read and write to a PostgreSQL database",
     "repository": {
         "type": "git",
