@@ -203,7 +203,7 @@ module.exports = function(RED) {
                     msg.payload.query = this.query;
                 }                
                 if (node.mydbConfig.connected) {
-                    if(!nodeContext.get(`${node.mydb}_schema`) && msg.payload.renewSchema && typeof msg.payload.renewSchema === 'boolean'){
+                    if(!nodeContext.get(`${node.mydb}_schema`) && msg?.payload?.renewSchema && typeof msg?.payload?.renewSchema === 'boolean'){
                         if(schemaAccess){
                             getMysqlDump().then(result => {
                                 nodeContext.set(`${node.mydb}_schema`, "DATABASE NAME: " +db +"\n\n\n"+result.dump.schema)
@@ -218,7 +218,18 @@ module.exports = function(RED) {
                             msg.payload.schema = null
                         }
                     } else {
-                        msg.payload.schema = nodeContext.get(`${node.mydb}_schema`)
+                        if(schemaAccess){
+                            getMysqlDump().then(result => {
+                                nodeContext.set(`${node.mydb}_schema`, "DATABASE NAME: " +db +"\n\n\n"+result.dump.schema)
+                                msg.payload.schema = result.dump.schema;
+                            }).catch(err => {
+                                status = { fill: "red", shape: "ring", text: RED._("mysql.status.error") + ": " + err.code };
+                                node.status(status)
+                                node.error(err, err.message)
+                            })
+                        } else {
+                            msg.payload.schema = nodeContext.get(`${node.mydb}_schema`)
+                        }
                     }
                     send = send || function() { node.send.apply(node,arguments) };
                     if(!msg.payload.query){
