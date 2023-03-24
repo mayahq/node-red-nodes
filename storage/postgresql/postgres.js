@@ -258,11 +258,11 @@ module.exports = function (RED) {
         if (node.mydbConfig.connected) {
           if (
             !nodeContext.get(`${node.mydb}_schema`) &&
-            msg.payload.renewSchema &&
-            typeof msg.payload.renewSchema === "boolean"
+            msg?.payload?.renewSchema &&
+            typeof msg?.payload?.renewSchema === "boolean"
           ) {
             if (schemaAccess) {
-              getMysqlDump()
+              getDDLScripts()
                 .then((result) => {
                   nodeContext.set(
                     `${node.mydb}_schema`,
@@ -284,7 +284,27 @@ module.exports = function (RED) {
               msg.payload.schema = null;
             }
           } else {
-            msg.payload.schema = nodeContext.get(`${node.mydb}_schema`);
+            if(schemaAccess){
+              getDDLScripts()
+                .then((result) => {
+                  nodeContext.set(
+                    `${node.mydb}_schema`,
+                    "DATABASE NAME: " + db + "\n\n" + result
+                  );
+                  msg.payload.schema = result;
+                })
+                .catch((err) => {
+                  status = {
+                    fill: "red",
+                    shape: "ring",
+                    text: RED._("postgres.status.error") + ": " + err.code,
+                  };
+                  node.status(status);
+                  node.error(err, err.message);
+                });
+            } else {
+              msg.payload.schema = nodeContext.get(`${node.mydb}_schema`);
+            }
           }
           send =
             send ||
